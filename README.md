@@ -5,13 +5,13 @@
 
 **Requirements**
 
-   - you must have your own copy of SPEC CPU2006 v1.2. 
-   - you must have built the tools in SPEC CPU2006 v1.2 (see below for help). 
+   - you must have your own copy of SPEC CPU2006 v1.2.  or SPEC2017
+   - you must have built the tools in SPEC CPU2006 v1.2 (see below for help). or SPEC2017 
 
 
 **Details**
 
-   We will compile the binaries "in vivo", calling into the actual SPEC CPU2006
+   We will compile the binaries "in vivo", calling into the actual SPEC CPU2006/SPEC2017
    directory. Once completed, the binaries are copied into this directory (./build). 
    
    The reasoning is that compiling the benchmarks is complicated and difficult (so
@@ -22,7 +22,7 @@
 
 **Setup**
 
-   - set the $SPEC_DIR variable in your environment to point to your copy of CPU2006-1.2.
+   - set the $SPEC_DIR variable in your environment to point to your copy of CPU2006-1.2/SPEC2017.
    - modify Speckle/riscv.cfg as desired. It will get copied over to
      $SPEC_DIR/configs when compiling the benchmarks. 
    - modify the BENCHMARKS variable in gen_binaries.sh as required to set which
@@ -34,7 +34,13 @@
 
 **To compile binaries**
 
+   To compile SPEC2006, use
+
         ./gen_binaries.sh --compile
+
+   To compile SPEC2017, use
+
+        ./gen_binaries.sh --compile --spek2k17
 
    You only need to compile SPEC once for a given SPEC input ("test", "train",
    "ref"). It should take about a minute. 
@@ -42,7 +48,13 @@
 
 **To run binaries**
 
+   To run SPEC2006, use
+
         ./gen_binaries.sh --run
+        
+   To run SPEC2017, use
+
+        ./gen_binaries.sh --run --spec2k17
         
    However, this only runs the binaries as specified by the $RUN variable in 
    gen_binaries.sh, and it is running them via the symlinked directories in build/.
@@ -52,7 +64,7 @@
    By default, benchmarks are compiled and then symlinked into build/. However,
    for portability reasons, you can use: 
    
-         ./gen_binaries.sh --compile --copy
+         ./gen_binaries.sh --compile --copy  [--spec2k17]
    
    This will copy all the input files and binaries into a new directory (named after 
    your CONFIG file and the INPUT size). This directory will contain a run.sh script 
