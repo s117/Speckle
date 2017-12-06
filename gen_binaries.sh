@@ -122,7 +122,7 @@ if [ "$compileFlag" = true ]; then
 
    echo "Compiling SPEC..."
    # copy over the config file we will use to compile the benchmarks
-   config_status=`cmp $BUILD_DIR/../${CONFIGFILE} $SPEC_DIR/config/${CONFIGFILE}`
+   config_status=`cmp $BUILD_DIR/../${CONFIGFILE} $SPEC_DIR/config/${CONFIGFILE} 2>&1`
    if [ "$config_status" = "" ]; then
       echo "Config is unchanged, not copying to avoid rebuild"
    else
