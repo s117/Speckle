@@ -36,25 +36,31 @@
 
    To compile SPEC2006, use
 
-        ./gen_binaries.sh --compile
+        ./gen_binaries.sh --compile [--bench <benchmark_set> --set <input_set>]
 
    To compile SPEC2017, use
 
-        ./gen_binaries.sh --compile --spek2k17
+        ./gen_binaries.sh --compile --spek2k17 [--bench <benchmark_set> --set <input_set>]
 
    You only need to compile SPEC once for a given SPEC input ("test", "train",
-   "ref"). It should take about a minute. 
+   "ref"). It should take about a minute. By default, the above commands will compile
+   integer benchmarks and set up the run directories with the test input set. 
+   The following flags allow controlling the input set ("test", "train" or "ref") and 
+   the benchmark set ("int" or "fp"):
+   
+   --set    -> Specify input set ("test", "train" or "ref")
+   --bench  -> Specify the benchmark set ("int" or "fp")
 
 
 **To run binaries**
 
    To run SPEC2006, use
 
-        ./gen_binaries.sh --run
+        ./gen_binaries.sh --run [--bench <benchmark_set> --set <input_set>]
         
    To run SPEC2017, use
 
-        ./gen_binaries.sh --run --spec2k17
+        ./gen_binaries.sh --run --spec2k17 [--bench <benchmark_set> --set <input_set>]
         
    However, this only runs the binaries as specified by the $RUN variable in 
    gen_binaries.sh, and it is running them via the symlinked directories in build/.
@@ -64,7 +70,7 @@
    By default, benchmarks are compiled and then symlinked into build/. However,
    for portability reasons, you can use: 
    
-         ./gen_binaries.sh --compile --copy  [--spec2k17]
+         ./gen_binaries.sh --compile --copy  [--spec2k17 --bench <benchmark_set> --set <input_set>]
    
    This will copy all the input files and binaries into a new directory (named after 
    your CONFIG file and the INPUT size). This directory will contain a run.sh script 
