@@ -48,8 +48,8 @@
    The following flags allow controlling the input set ("test", "train" or "ref") and 
    the benchmark set ("int" or "fp"):
    
-   --set    -> Specify input set ("test", "train" or "ref")
-   --bench  -> Specify the benchmark set ("int" or "fp")
+      --set    -> Specify input set ("test", "train" or "ref")
+      --bench  -> Specify the benchmark set ("int" or "fp")
 
 
 **To run binaries**
