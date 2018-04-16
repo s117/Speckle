@@ -71,6 +71,7 @@ done
 if [ "$spec2k17Flag" = true ]; then
    echo "Building SPEC 2K17"
    CONFIG=${CONFIG_2K17}
+   CONFIGFILE=${CONFIG}.cfg
 
    if [ "$inputSet" = ref ]; then
      runDirInputSet=refspeed
@@ -114,7 +115,7 @@ echo ""
 
 
 BUILD_DIR=$PWD/build
-COPY_DIR=$PWD/${LABEL}-spec-${inputSet}
+COPY_DIR=$PWD/${LABEL}-spec
 mkdir -p build;
 
 # compile the binaries
@@ -122,24 +123,27 @@ if [ "$compileFlag" = true ]; then
 
    echo "Compiling SPEC..."
    # copy over the config file we will use to compile the benchmarks
-   config_status=`cmp $BUILD_DIR/../${CONFIGFILE} $SPEC_DIR/config/${CONFIGFILE} 2>&1`
+   config_status=`diff $BUILD_DIR/../${CONFIGFILE} $SPEC_DIR/config/${CONFIGFILE} 2>&1`
+   echo "$config_status"
    if [ "$config_status" = "" ]; then
       echo "Config is unchanged, not copying to avoid rebuild"
    else
       echo "Config is changed, copying"
       cp -f $BUILD_DIR/../${CONFIGFILE} $SPEC_DIR/config/${CONFIGFILE}
    fi
+   #cp -f $BUILD_DIR/../${CONFIGFILE} $SPEC_DIR/config/${CONFIGFILE}
+   echo "Copied Config..."
 
-   if [ "$spec2k17Flag" = true ]; then
-      cd $SPEC_DIR; . ./shrc; time runcpu --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
-   else
-      cd $SPEC_DIR; . ./shrc; time runspec --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
-   fi
+   #if [ "$spec2k17Flag" = true ]; then
+   #   cd $SPEC_DIR; . ./shrc; time runcpu --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
+   #else
+   #   cd $SPEC_DIR; . ./shrc; time runspec --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
+   #fi
   
-   if [ "$copyFlag" = true ]; then
-      rm -rf $COPY_DIR
-      mkdir -p $COPY_DIR
-   fi
+   #if [ "$copyFlag" = true ]; then
+   #   rm -rf $COPY_DIR
+   #   mkdir -p $COPY_DIR
+   #fi
   
    # copy back over the binaries.  Fuck xalancbmk for being different.
    # Do this for each input type.
@@ -180,19 +184,19 @@ if [ "$compileFlag" = true ]; then
 
       if [ "$copyFlag" = true ]; then
          echo "---- copying benchmarks ----- "
-         mkdir -p $COPY_DIR/$b
-         cp -r $BUILD_DIR/../commands $COPY_DIR/commands
-         cp $BUILD_DIR/../run.sh $COPY_DIR/run.sh
-         sed -i '4s/.*/INPUT_TYPE='${inputSet}' #this line was auto-generated from gen_binaries.sh/' $COPY_DIR/run.sh
+         mkdir -p $COPY_DIR/${b}_${inputSet}
+         #cp -r $BUILD_DIR/../commands $COPY_DIR/commands
+         #cp $BUILD_DIR/../run.sh $COPY_DIR/run.sh
+         #sed -i '4s/.*/INPUT_TYPE='${inputSet}' #this line was auto-generated from gen_binaries.sh/' $COPY_DIR/run.sh
          for f in $BMK_DIR/*; do
             echo $f
             if [[ -d $f ]]; then
-               cp -r $f $COPY_DIR/$b/$(basename "$f")
+               cp -r $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
             else
-               cp $f $COPY_DIR/$b/$(basename "$f")
+               cp $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
             fi
          done
-         mv $COPY_DIR/$b/${SHORT_EXE}_base.${LABEL} $COPY_DIR/$b/${SHORT_EXE}
+         #mv $COPY_DIR/$b/${SHORT_EXE}_base.${LABEL} $COPY_DIR/$b/${SHORT_EXE}
       fi
    done
 fi
