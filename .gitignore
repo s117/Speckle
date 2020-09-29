@@ -1,0 +1,5 @@
+SPEC
+*.log
+untracked
+build
+built_bin

@@ -1,0 +1,105 @@
+__BUILD_COMMON_BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+set -e
+
+source "${__BUILD_COMMON_BASE_DIR}/config.in/config.gen"
+
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+function check_command() {
+  #statements
+  which $1 1>/dev/null
+  if [[ $? != 0 ]]; then
+    echo "${1} is not a valid command"
+    exit 1
+  fi
+}
+
+function reset_dir() {
+  if [[ ! -e $1 ]]; then
+    echo Creating dir $1
+    mkdir -p "${1}"
+  elif [[ -d $1 ]]; then
+    echo Reseting dir $1
+    rm -fr "${1}"
+    mkdir -p "${1}"
+  else
+    echo $1 is not a dir
+    return -1
+  fi
+  return 0
+}
+
+function build() {
+  # build [TOOL_PATH] [PREFIX] [2006 | 2017] [int | fp] [ref | test] [compile+copy | compile]
+  local TOOLCHAIN_PATH=$1
+  local XCOMP_PREFIX=$2
+  local SPEC_VER=$3
+  local SPEC_BENCH_SET=$4
+  local SPEC_INPUT_SET=$5
+  local BUILD_MODE=$6
+
+  pushd ${__BUILD_COMMON_BASE_DIR}
+
+  if [[ ${BUILD_MODE} != "compile+copy" && ${BUILD_MODE} != "compile" && ${BUILD_MODE} != "copy" ]]; then
+    echo "Error: Bad mode: ${BUILD_MODE}, accept: compile, copy, compile+copy"
+    return -1
+  fi
+
+  # local export PATH=${TOOLCHAIN_PATH}/bin:$PATH
+  local BUILD_CC=${XCOMP_PREFIX}gcc
+  local BUILD_CC_CMD=${TOOLCHAIN_PATH}/bin/${BUILD_CC}
+
+  check_command ${BUILD_CC_CMD}
+  local BUILD_CC_VERSION=$(${BUILD_CC_CMD} -dumpversion)
+  echo ===== Build with ${BUILD_CC} \(${BUILD_CC_VERSION}\) @ \"$(which ${BUILD_CC_CMD})\" =====
+
+  echo generating cfg
+  generate_riscv_cfg ${TOOLCHAIN_PATH} ${XCOMP_PREFIX} ${SPEC_VER} ./riscv_spec${SPEC_VER}.cfg
+  echo generated cfg
+
+  local BUILD_BIN_SAVE_PATH=built_bin/${BUILD_CC}-${BUILD_CC_VERSION}
+  local DUMP_DIR=${BUILD_BIN_SAVE_PATH}/spec${SPEC_VER}_${SPEC_BENCH_SET}
+
+  if [[ ${BUILD_MODE} == "compile+copy" || ${BUILD_MODE} == "copy" ]]; then
+    reset_dir riscv-m64-spec
+  fi
+
+  ./compile_bench.sh ${SPEC_VER} ${SPEC_BENCH_SET} ${SPEC_INPUT_SET} ${BUILD_MODE}
+
+  if [[ ${BUILD_MODE} == "compile+copy" || ${BUILD_MODE} == "copy" ]]; then
+    reset_dir ${DUMP_DIR}
+    mv -f riscv-m64-spec/* ${DUMP_DIR}/
+
+    if [[ -f ${TOOLCHAIN_PATH}/version/${XCOMP_PREFIX}toolchain ]]; then
+      echo "Found toolchain version file (${TOOLCHAIN_PATH}/version/${XCOMP_PREFIX}toolchain), saving the version info..."
+      for p in $(ls "${DUMP_DIR}"); do
+        p_abs=$(readlink -f "${DUMP_DIR}/${p}")
+        if [[ -d "${p_abs}" ]]; then
+          mkdir -p "${p_abs}/__toolchain_ver__"
+          cp -v "${TOOLCHAIN_PATH}/version/${XCOMP_PREFIX}toolchain" "${p_abs}/__toolchain_ver__/${XCOMP_PREFIX}toolchain"
+        fi
+      done
+    else
+      echo "No toolchain version file found (${TOOLCHAIN_PATH}/version/${XCOMP_PREFIX}toolchain), skipping saving the version info"
+    fi
+  fi
+
+  rm -f ./riscv_spec${SPEC_VER}.cfg
+
+  reset_dir ${BUILD_BIN_SAVE_PATH}/any
+  pushd ${BUILD_BIN_SAVE_PATH}/any
+    ln -sf ../spec2006_int/* ./
+    ln -sf ../spec2006_fp/* ./
+    ln -sf ../spec2017_int/* ./
+    ln -sf ../spec2017_fp/* ./
+  popd # ${BUILD_BIN_SAVE_PATH}/any
+
+  popd # __BUILD_COMMON_BASE_DIR
+}

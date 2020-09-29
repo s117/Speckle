@@ -1,0 +1,37 @@
+__GENERATOR_CONFIG_IN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+function generate_riscv_cfg() {
+  local TOOLCHAIN_PATH="$1"
+  local XCOMP_PREFIX="$2"
+  local SPEC_VER="$3"
+  local CFG_FILE_NAME="riscv_spec${SPEC_VER}.cfg.in"
+  local OUTPUT_PATH="$4"
+  local TMPL_PATH="${__GENERATOR_CONFIG_IN_DIR}/${CFG_FILE_NAME}"
+  echo Generating RISCV Config file for SPEC${SPEC_VER} from ${TMPL_PATH} to ${OUTPUT_PATH}
+  if [[ -f ${TMPL_PATH} ]]; then
+    cp "${TMPL_PATH}" "${OUTPUT_PATH}"
+    sed -i "s:__GNU_TOOLCHAIN_PATH__:${TOOLCHAIN_PATH}:g" "${OUTPUT_PATH}"
+    sed -i "s:__GNU_XCOMP_PREFIX__:${XCOMP_PREFIX}:g"     "${OUTPUT_PATH}"
+    return 0
+  else
+    return -1
+  fi
+}
+
+function generate_x64_cfg() {
+  local TOOLCHAIN_PATH="/usr"
+  local XCOMP_PREFIX=""
+  local SPEC_VER="$1"
+  local CFG_FILE_NAME="x64_spec${SPEC_VER}.cfg.in"
+  local OUTPUT_PATH="$2"
+  local TMPL_PATH="${__GENERATOR_CONFIG_IN_DIR}/${CFG_FILE_NAME}"
+  echo Generating x64 Config file for SPEC${SPEC_VER} from ${TMPL_PATH} to ${OUTPUT_PATH}
+  if [[ -f ${TMPL_PATH} ]]; then
+    cp "${TMPL_PATH}" "${OUTPUT_PATH}"
+    sed -i "s:__GNU_TOOLCHAIN_PATH__:${TOOLCHAIN_PATH}:g" "${OUTPUT_PATH}"
+    sed -i "s:__GNU_XCOMP_PREFIX__:${XCOMP_PREFIX}:g"     "${OUTPUT_PATH}"
+    return 0
+  else
+    return -1
+  fi
+}

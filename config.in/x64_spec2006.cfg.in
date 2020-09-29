@@ -1,0 +1,181 @@
+# -------------------------------------------------------------
+# RISC-V Config file for SPEC CPU2006
+# Last Update: 2015 Jan 12
+
+# -------------------------------------------------------------
+
+# This file is an agglomeration from the provided CPU2006 example configuration
+# files (Example-simple.cfg and Example-linux64-amd64-gcc43+.cfg).
+
+# Note: I make no promises as to its suitability for use in official
+# submissions.
+
+# Please see http://www.spec.org/cpu2006/Docs/config.html (also available in
+# the Docs directory of your SPEC tree) for details on config file setup.  The
+# config.html page has a list of all of the fields required for a full
+# publication ofresults.
+
+# The definition of following two macros will updated by the cfg generator
+%ifndef %{toolchain_dir}
+%   define  toolchain_dir    __GNU_TOOLCHAIN_PATH__
+%endif
+
+%ifndef %{toolchain_perfix}
+%   define  toolchain_perfix __GNU_XCOMP_PREFIX__
+%endif
+
+%ifndef %{build_ncpus}         # EDIT to adjust number of simultaneous compiles.
+%   define  build_ncpus 16     #      Or, you can set it on the command line:
+%endif                         #      'runcpu --define build_ncpus=nn'
+
+parallel_setup     = %{build_ncpus}
+
+#####################################################################
+# System Under Test (SUT) Section
+
+# If it affects performance, you need to describe it, either in the
+# pre-defined fields or by adding it to the notes section. Replace the
+# setting below with the ones that match your machine.
+
+#######################################################################
+
+# Tester Description
+test_sponsor       = Test Sponsor (Optional, defaults to hw_vendor)
+tester             = (Optional, defaults to hw_vendor)
+
+# System Description
+hw_model           = SPX_Workstation
+hw_memory          = 64 GB
+hw_disk            = 1TB SSD
+hw_vendor          = ASUS
+hw_other           = None
+hw_avail           = Dec-2018
+
+# CPU description
+# See http://www.spec.org/cpu2006/Docs/runrules.html#cpucount
+# for a discussion of these fields
+
+hw_cpu_name        = Intel Core i9-9900KS
+hw_cpu_char        =
+hw_cpu_mhz         = 500
+hw_fpu             = Integrated
+hw_nchips          = 1
+hw_ncores          = 8
+hw_ncoresperchip   = 8
+hw_nthreadspercore = 2
+hw_ncpuorder       = 1,2 chips
+
+# Cache description
+
+hw_pcache          = 32KB I + 32KB D on chip per chip
+hw_scache          = 256 KB I+D on chip per chip
+hw_tcache          = 16 MB I+D on chip per chip
+hw_ocache          = None
+
+# Tester description
+
+license_num     = 0
+
+# Operating system, file system
+
+sw_os           = Manjaro rolling
+sw_file         = BTRFS
+sw_state        = Multi-user
+sw_other        = None
+
+## SW config
+sw_compiler        = gcc, g++ 10.2.0
+sw_avail           = Jul-2020
+sw_base_ptrsize    = 64-bit
+sw_peak_ptrsize    = 64-bit
+
+#######################################################################
+# End of SUT section
+# If this config file were to be applied to several SUTs, edits would
+# be needed only ABOVE this point.
+######################################################################
+
+ignore_errors = yes
+tune          = base
+basepeak      = yes
+ext           = x64
+output_format = asc,csv,html
+makeflags     = --jobs=%{build_ncpus}
+
+# The publicly-accessible PathScale flags file at the URL below works
+# with the settings in this file.  If you change compilers or compiler
+# settings, you'll likely need to use a different flags file.
+#flagsurl0     = $[top]/config/flags/riscv64-gcc-flags-revA.xml
+#flagsurl1     = $[top]/config/flags/riscv64-linux-platform-revA.xml
+
+reportable    = yes
+
+#####################################################################
+#
+# Compiler selection
+#
+#####################################################################
+default=default=default=default:
+  CC  = %{toolchain_dir}/bin/%{toolchain_perfix}gcc
+  CXX = %{toolchain_dir}/bin/%{toolchain_perfix}g++
+  FC  = %{toolchain_dir}/bin/%{toolchain_perfix}gfortran
+
+#####################################################################
+# Optimization
+#####################################################################
+
+default=base=default=default:
+  COPTIMIZE      = -g -O2 -fno-strict-aliasing
+  CXXOPTIMIZE    = -g -O2 -fno-strict-aliasing
+  FOPTIMIZE      = -g -O2 -fno-strict-aliasing
+
+#####################################################################
+# 32/64 bit Portability Flags - all
+#####################################################################
+
+default=base=default=default:
+  PORTABILITY    = -DSPEC_CPU_LP64
+
+#####################################################################
+# Portability Flags
+#####################################################################
+
+400.perlbench=default=default=default:
+  CPORTABILITY   = -DSPEC_CPU_LINUX_X64 -std=gnu89
+
+416.gamess=default=default=default:
+  CPORTABILITY   =  -funconstrained-commons
+  # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69368
+  #                                                  For value difference               For 'INTEGRAL TRANSFORMATION CANNOT ASSIGN A DEFINITE ORBITAL SYMMETRY TO MO'
+  FPORTABILITY   = -std=legacy -fno-strict-aliasing -fno-aggressive-loop-optimizations -fno-tree-dominator-opts
+
+447.dealII=default=default=default:
+  # error: ISO C++ forbids comparison between pointer and integer [-fpermissive]
+  CXXPORTABILITY =  -fpermissive -std=c++11
+
+450.soplex=default=default=default:
+  # if (m_input.getline(m_buf, sizeof(m_buf)) == 0)
+  # error: no match for 'operator==' 'std::basic_istream<char>' and 'int')
+  CXXPORTABILITY =  -std=c++03
+
+462.libquantum=default=default=default:
+  CPORTABILITY   =  -DSPEC_CPU_LINUX
+
+464.h264ref=default=default=default:
+  CPORTABILITY   =  -fsigned-char
+
+482.sphinx3=default=default=default:
+  CPORTABILITY   =  -fsigned-char
+
+483.xalancbmk=default=default=default:
+  CXXPORTABILITY = -DSPEC_CPU_LINUX -include cstdlib -include cstring
+
+481.wrf=default=default=default:
+  CPORTABILITY   = -DSPEC_CPU_CASE_FLAG -DSPEC_CPU_LINUX
+  FPORTABILITY   = -fallow-argument-mismatch
+
+#####################################################################
+# Notes
+#####################################################################
+
+notes_submit_005 =See the configuration file for details.

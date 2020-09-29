@@ -6,13 +6,13 @@
 #  * allow the user to input their desired input set
 #  * auto-handle output file generation
 
-if [ -z  "$SPEC_DIR" ]; then 
+if [ -z  "$SPEC_DIR" ]; then
    echo "  Please set the SPEC_DIR environment variable to point to your copy of SPEC CPU2006 / SPEC CPU2017."
    exit 1
 fi
-
-CONFIG=riscv
-CONFIG_2K17=riscv_spec2k17
+ARCH=riscv
+CONFIG=${ARCH}_spec2006
+CONFIG_2K17=${ARCH}_spec2017
 LABEL=riscv-m64
 CONFIGFILE=${CONFIG}.cfg
 RUN="spike pk -c "
@@ -36,10 +36,10 @@ benchSet=none
 while test $# -gt 0
 do
    case "$1" in
-        --compile) 
+        --compile)
             compileFlag=true
             ;;
-        --run) 
+        --run)
             runFlag=true
             ;;
         --copy)
@@ -48,11 +48,11 @@ do
         --spec2k17)
             spec2k17Flag=true
             ;;
-        --set) 
+        --set)
             inputSet=$2
             shift
             ;;
-        --bench) 
+        --bench)
             benchSet=$2
             shift
             ;;
@@ -134,17 +134,12 @@ if [ "$compileFlag" = true ]; then
    #cp -f $BUILD_DIR/../${CONFIGFILE} $SPEC_DIR/config/${CONFIGFILE}
    echo "Copied Config..."
 
-   #if [ "$spec2k17Flag" = true ]; then
-   #   cd $SPEC_DIR; . ./shrc; time runcpu --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
-   #else
-   #   cd $SPEC_DIR; . ./shrc; time runspec --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
-   #fi
-  
-   #if [ "$copyFlag" = true ]; then
-   #   rm -rf $COPY_DIR
-   #   mkdir -p $COPY_DIR
-   #fi
-  
+   if [ "$spec2k17Flag" = true ]; then
+     cd $SPEC_DIR; . ./shrc; time runcpu --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
+   else
+     cd $SPEC_DIR; . ./shrc; time runspec --config ${CONFIG} --size ${inputSet} --action setup --loose --ignore_errors ${benchSet}
+   fi
+
    # copy back over the binaries.  Fuck xalancbmk for being different.
    # Do this for each input type.
    # assume the CPU2006/CPU2017 directories are clean. I've hard-coded the directories I'm going to copy out of
@@ -158,47 +153,67 @@ if [ "$compileFlag" = true ]; then
       if [ $b == "625.x264_s" ]; then SHORT_EXE=ldecod_s; fi
       if [ $b == "628.pop2_s" ]; then SHORT_EXE=speed_pop2; fi
       if [ $b == "654.roms_s" ]; then SHORT_EXE=sroms; fi
-      
+
       echo ""
       if [ "$spec2k17Flag" = true ]; then
          BMK_DIR=$SPEC_DIR/benchspec/CPU/$b/run/run_base_${runDirInputSet}_${LABEL}.0000;
          echo "ls $SPEC_DIR/benchspec/CPU/$b/run"
          ls $SPEC_DIR/benchspec/CPU/$b/run
+         echo "ls $SPEC_DIR/benchspec/CPU/$b/run/run_base_${runDirInputSet}_${LABEL}.0000"
          ls $SPEC_DIR/benchspec/CPU/$b/run/run_base_${runDirInputSet}_${LABEL}.0000
          echo ""
       else
-         BMK_DIR=$SPEC_DIR/benchspec/CPU2006/$b/run/run_base_${inputSet}_${CONFIG}.0000;
+         BMK_DIR=$SPEC_DIR/benchspec/CPU2006/$b/run/run_base_${inputSet}_${ARCH}.0000;
          echo "ls $SPEC_DIR/benchspec/CPU2006/$b/run"
          ls $SPEC_DIR/benchspec/CPU2006/$b/run
-         ls $SPEC_DIR/benchspec/CPU2006/$b/run/run_base_${inputSet}_${CONFIG}.0000
+         echo "ls $SPEC_DIR/benchspec/CPU2006/$b/run/run_base_${inputSet}_${ARCH}.0000"
+         ls $SPEC_DIR/benchspec/CPU2006/$b/run/run_base_${inputSet}_${ARCH}.0000
          echo ""
       fi
 
       # make a symlink to SPEC (to prevent data duplication for huge input files)
-      echo "ln -sf $BMK_DIR $BUILD_DIR/${b}_${inputSet}"
       if [ -d $BUILD_DIR/${b}_${inputSet} ]; then
          echo "unlink $BUILD_DIR/${b}_${inputSet}"
          unlink $BUILD_DIR/${b}_${inputSet}
       fi
+      echo "ln -sf $BMK_DIR $BUILD_DIR/${b}_${inputSet}"
       ln -sf $BMK_DIR $BUILD_DIR/${b}_${inputSet}
-
-      if [ "$copyFlag" = true ]; then
-         echo "---- copying benchmarks ----- "
-         mkdir -p $COPY_DIR/${b}_${inputSet}
-         #cp -r $BUILD_DIR/../commands $COPY_DIR/commands
-         #cp $BUILD_DIR/../run.sh $COPY_DIR/run.sh
-         #sed -i '4s/.*/INPUT_TYPE='${inputSet}' #this line was auto-generated from gen_binaries.sh/' $COPY_DIR/run.sh
-         for f in $BMK_DIR/*; do
-            echo $f
-            if [[ -d $f ]]; then
-               cp -r $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
-            else
-               cp $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
-            fi
-         done
-         #mv $COPY_DIR/$b/${SHORT_EXE}_base.${LABEL} $COPY_DIR/$b/${SHORT_EXE}
-      fi
    done
+fi
+
+# copy the binaries
+if [ "$copyFlag" = true ]; then
+   rm -rf $COPY_DIR
+   mkdir -p $COPY_DIR
+
+  # copy back over the binaries.  Fuck xalancbmk for being different.
+  # Do this for each input type.
+  # assume the CPU2006/CPU2017 directories are clean. I've hard-coded the directories I'm going to copy out of
+
+  for b in ${BENCHMARKS[@]}; do
+    echo ${b}
+
+    echo ""
+    if [ "$spec2k17Flag" = true ]; then
+       BMK_DIR=$SPEC_DIR/benchspec/CPU/$b/run/run_base_${runDirInputSet}_${LABEL}.0000;
+    else
+       BMK_DIR=$SPEC_DIR/benchspec/CPU2006/$b/run/run_base_${inputSet}_${ARCH}.0000;
+    fi
+
+
+    echo "---- copying benchmarks ----- "
+    mkdir -p $COPY_DIR/${b}_${inputSet}
+    for f in $BMK_DIR/*; do
+      echo $f
+      if [[ -d $f ]]; then
+         echo cp -r $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
+         cp -r $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
+      else
+         echo cp $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
+         cp $f $COPY_DIR/${b}_${inputSet}/$(basename "$f")
+      fi
+    done
+  done
 fi
 
 # running the binaries/building the command file
@@ -206,7 +221,7 @@ fi
 if [ "$runFlag" = true ]; then
 
    for b in ${BENCHMARKS[@]}; do
-   
+
       cd $BUILD_DIR/${b}_${inputSet}
       SHORT_EXE=${b##*.} # cut off the numbers ###.short_exe
       # handle benchmarks that don't conform to the naming convention
@@ -217,18 +232,18 @@ if [ "$runFlag" = true ]; then
       if [ $b == "625.x264_s" ]; then SHORT_EXE=ldecod_s; fi
       if [ $b == "628.pop2_s" ]; then SHORT_EXE=speed_pop2; fi
       if [ $b == "654.roms_s" ]; then SHORT_EXE=sroms; fi
-      
+
       # read the command file
       IFS=$'\n' read -d '' -r -a commands < $BUILD_DIR/../commands/${b}.${inputSet}.cmd
 
       for input in "${commands[@]}"; do
          if [[ ${input:0:1} != '#' ]]; then # allow us to comment out lines in the cmd files
             echo "~~~Running ${b}"
-            echo "  ${RUN} ${SHORT_EXE}_base.${LABEL} ${input}" 
+            echo "  ${RUN} ${SHORT_EXE}_base.${LABEL} ${input}"
             eval ${RUN} ${SHORT_EXE}_base.${LABEL} ${input}
          fi
       done
-   
+
    done
 
 fi
