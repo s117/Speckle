@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-BUILD_SPEC_VER=$1
-BUILD_TOOLCHAIN_TYPE=$2
+BUILD_TOOLCHAIN_TYPE=$1
+BUILD_SPEC_VER=$2
+BUILD_DATASET=$3
 
 source build.common
 
@@ -11,12 +12,6 @@ if [[ -z $RISCV || ( ! -d $RISCV ) ]]; then
   exit 1
 else
   RISCV_TOOL_PATH=$RISCV
-fi
-
-if [[ $BUILD_SPEC_VER != "2006" && $BUILD_SPEC_VER != "2017" ]]; then
-  >&2 echo "Invalid SPEC version: $BUILD_SPEC_VER"
-  >&2 echo "Only CPU 2006 and 2017 is supported"
-  exit 1
 fi
 
 if [[ $BUILD_TOOLCHAIN_TYPE == "newlib" ]]; then
@@ -29,8 +24,20 @@ else
   exit 1
 fi
 
+if [[ $BUILD_SPEC_VER != "2006" && $BUILD_SPEC_VER != "2017" ]]; then
+  >&2 echo "Invalid SPEC version: $BUILD_SPEC_VER"
+  >&2 echo "Only CPU 2006 and 2017 is supported"
+  exit 1
+fi
+
+if [[ $BUILD_DATASET != "test" && $BUILD_DATASET != "ref" ]]; then
+  >&2 echo "Invalid dataset: $BUILD_SPEC_VER"
+  >&2 echo "Pick one from \"test\" or \"ref\""
+  exit 1
+fi
+
 mkdir -p log
 
 # build [TOOL_PATH] [PREFIX] [2006 | 2017] [int | fp] [ref | test] [compile | copy | compile+copy]
-build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} int ref compile+copy 2>&1 | tee log/build_cpu-${BUILD_SPEC_VER}-int_${BUILD_TOOLCHAIN_TYPE}.log
-build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} fp  ref compile+copy 2>&1 | tee log/build_cpu-${BUILD_SPEC_VER}-fp_${BUILD_TOOLCHAIN_TYPE}.log
+build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} int ${BUILD_DATASET} compile+copy 2>&1 | tee log/build_cpu-${BUILD_SPEC_VER}-int_${BUILD_TOOLCHAIN_TYPE}.log
+build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} fp  ${BUILD_DATASET} compile+copy 2>&1 | tee log/build_cpu-${BUILD_SPEC_VER}-fp_${BUILD_TOOLCHAIN_TYPE}.log
