@@ -15,7 +15,8 @@ else
 fi
 
 if [[ $BUILD_TOOLCHAIN_TYPE == "newlib" ]]; then
-  RISCV_PREFIX=riscv64-unknown-elf-
+  1>&2 echo "this version of wrapper scripts doesn't support using newlib with clang yet"
+  exit -1
 elif [[ $BUILD_TOOLCHAIN_TYPE == "glibc" ]]; then
   RISCV_PREFIX=riscv64-unknown-linux-gnu-
 else

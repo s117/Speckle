@@ -121,8 +121,16 @@ default=default=default=default:
   # Ideally, we would use newlib (riscv64-unknown-elf-gcc) which uses
   # those settings by default, however some of the SPEC benchmarks require
   # glibc.
-  CC  = %{toolchain_dir}/bin/%{toolchain_perfix}gcc      -static -Wl,-Ttext-segment,0x10000
-  CXX = %{toolchain_dir}/bin/%{toolchain_perfix}g++      -static -Wl,-Ttext-segment,0x10000
+  CC  = clang \
+ --gcc-toolchain=%{toolchain_dir} --sysroot=%{toolchain_dir}/sysroot \
+ --target=riscv64-unknown-linux-gnu -march=rv64imafd -mabi=lp64d \
+ -static -Wl,-Ttext-segment,0x10000
+
+  CXX = clang++ \
+ --gcc-toolchain=%{toolchain_dir} --sysroot=%{toolchain_dir}/sysroot \
+ --target=riscv64-unknown-linux-gnu -march=rv64imafd -mabi=lp64d \
+ -static -Wl,-Ttext-segment,0x10000
+
   FC  = %{toolchain_dir}/bin/%{toolchain_perfix}gfortran -static -Wl,-Ttext-segment,0x10000
 
 #####################################################################
@@ -130,8 +138,8 @@ default=default=default=default:
 #####################################################################
 
 default=base=default=default:
-  COPTIMIZE      = -g -O2 -fno-strict-aliasing
-  CXXOPTIMIZE    = -g -O2 -fno-strict-aliasing
+  COPTIMIZE      = -g -O2 -fno-strict-aliasing -fuse-ld=%{toolchain_dir}/bin/%{toolchain_perfix}ld
+  CXXOPTIMIZE    = -g -O2 -fno-strict-aliasing -fuse-ld=%{toolchain_dir}/bin/%{toolchain_perfix}ld
   FOPTIMIZE      = -g -O2 -fno-strict-aliasing
 
 #####################################################################
@@ -156,7 +164,7 @@ default=base=default=default:
 
 447.dealII=default=default=default:
   # error: ISO C++ forbids comparison between pointer and integer [-fpermissive]
-  CXXPORTABILITY =  -fpermissive -std=c++11
+  CXXPORTABILITY =  -fpermissive -std=c++03
 
 450.soplex=default=default=default:
   # if (m_input.getline(m_buf, sizeof(m_buf)) == 0)
@@ -169,11 +177,14 @@ default=base=default=default:
 464.h264ref=default=default=default:
   CPORTABILITY   =  -fsigned-char
 
+473.astar=default=default=default:
+  CXXPORTABILITY =  -std=c++03
+
 482.sphinx3=default=default=default:
   CPORTABILITY   =  -fsigned-char
 
 483.xalancbmk=default=default=default:
-  CXXPORTABILITY = -DSPEC_CPU_LINUX -include cstdlib -include cstring
+  CXXPORTABILITY = -DSPEC_CPU_LINUX -include cstdlib -include cstring -std=c++03
 
 481.wrf=default=default=default:
   CPORTABILITY   = -DSPEC_CPU_CASE_FLAG -DSPEC_CPU_LINUX

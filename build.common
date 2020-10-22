@@ -53,8 +53,8 @@ function build() {
   fi
 
   # local export PATH=${TOOLCHAIN_PATH}/bin:$PATH
-  local BUILD_CC=${XCOMP_PREFIX}gcc
-  local BUILD_CC_CMD=${TOOLCHAIN_PATH}/bin/${BUILD_CC}
+  local BUILD_CC=clang
+  local BUILD_CC_CMD=${BUILD_CC}
 
   check_command ${BUILD_CC_CMD}
   local BUILD_CC_VERSION=$(${BUILD_CC_CMD} -dumpversion)

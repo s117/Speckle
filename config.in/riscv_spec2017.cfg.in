@@ -125,8 +125,19 @@ default:
   preENV_LD_LIBRARY_PATH  = %{toolchain_dir}/lib64/:%{toolchain_dir}/lib/:/lib64
   #preENV_LD_LIBRARY_PATH  = %{toolchain_dir}/lib64/:%{toolchain_dir}/lib/:/lib64:%{ENV_LD_LIBRARY_PATH}
   SPECLANG                = %{toolchain_dir}/bin/
-  CC                      = $(SPECLANG)%{toolchain_perfix}gcc      -static -Wl,-Ttext-segment,0x10000 %{model} -std=c99
-  CXX                     = $(SPECLANG)%{toolchain_perfix}g++      -static -Wl,-Ttext-segment,0x10000 %{model}
+
+  CC  = clang \
+ -fuse-ld=%{toolchain_dir}/bin/%{toolchain_perfix}ld \
+ --gcc-toolchain=%{toolchain_dir} --sysroot=%{toolchain_dir}/sysroot \
+ --target=riscv64-unknown-linux-gnu -march=rv64imafd -mabi=lp64d \
+ -static -Wl,-Ttext-segment,0x10000 -std=c99
+
+  CXX = clang++ \
+ -fuse-ld=%{toolchain_dir}/bin/%{toolchain_perfix}ld \
+ --gcc-toolchain=%{toolchain_dir} --sysroot=%{toolchain_dir}/sysroot \
+ --target=riscv64-unknown-linux-gnu -march=rv64imafd -mabi=lp64d \
+ -static -Wl,-Ttext-segment,0x10000
+
   FC                      = $(SPECLANG)%{toolchain_perfix}gfortran -static -Wl,-Ttext-segment,0x10000 %{model}
   # How to say "Show me your version, please"
   CC_VERSION_OPTION       = -v
@@ -215,7 +226,10 @@ default:               # data model applies to all benchmarks
 #                   switches here.  See also 'About the -fno switches' below.
 #
 default=base:         # flags for all base
-  OPTIMIZE       = -g -O3 -fno-tree-loop-vectorize # -fno-unsafe-math-optimizations
+  OPTIMIZE       = -g -O3 # -fno-tree-loop-vectorize # -fno-unsafe-math-optimizations
+  COPTIMIZE      = -fuse-ld=%{toolchain_dir}/bin/%{toolchain_perfix}ld
+  CXXOPTIMIZE    = -fuse-ld=%{toolchain_dir}/bin/%{toolchain_perfix}ld
+  FOPTIMIZE      = -fno-tree-loop-vectorize
 
 intrate,intspeed=base: # flags for integer base
 %if %{bits} == 32
