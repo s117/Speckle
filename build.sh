@@ -40,5 +40,5 @@ fi
 mkdir -p log
 
 # build [TOOL_PATH] [PREFIX] [2006 | 2017] [int | fp] [ref | test] [compile | copy | compile+copy]
-build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} int ${BUILD_DATASET} compile+copy 2>&1 | tee log/build_cpu-${BUILD_SPEC_VER}-int_${BUILD_TOOLCHAIN_TYPE}.log
-build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} fp  ${BUILD_DATASET} compile+copy 2>&1 | tee log/build_cpu-${BUILD_SPEC_VER}-fp_${BUILD_TOOLCHAIN_TYPE}.log
+build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} int ${BUILD_DATASET} compile+copy 2>&1 | tee log/build_clang_cpu-${BUILD_SPEC_VER}-int_${BUILD_TOOLCHAIN_TYPE}.log
+build ${RISCV_TOOL_PATH} ${RISCV_PREFIX} ${BUILD_SPEC_VER} fp  ${BUILD_DATASET} compile+copy 2>&1 | tee log/build_clang_cpu-${BUILD_SPEC_VER}-fp_${BUILD_TOOLCHAIN_TYPE}.log
